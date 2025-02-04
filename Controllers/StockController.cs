@@ -1,6 +1,7 @@
 ﻿using dotnet_web_api.Data;
 using dotnet_web_api.DTOs.Stock;
 using dotnet_web_api.Mappers;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_web_api.Controllers
@@ -67,6 +68,23 @@ namespace dotnet_web_api.Controllers
             _context.SaveChanges();
 
             return Ok(stockModel.ToStockDto());
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult Delete([FromRoute] int id)
+        {
+            var stockModel = _context.Stocks.FirstOrDefault(x => x.Id == id);
+
+            if(stockModel == null)
+            {
+                return NotFound();
+            }
+
+            _context.Stocks.Remove(stockModel);
+            _context.SaveChanges();
+
+            return NoContent();
         }
     }
 }
