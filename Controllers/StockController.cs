@@ -1,4 +1,5 @@
 ﻿using dotnet_web_api.Data;
+using dotnet_web_api.DTOs.Stock;
 using dotnet_web_api.Mappers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,6 +35,15 @@ namespace dotnet_web_api.Controllers
             }
 
             return Ok(stock.ToStockDto());
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody] CreateStockRequestDto createStockDto)
+        {
+            var stockModel = createStockDto.ToStockFromCreateDTO();
+            _context.Stocks.Add(stockModel);
+            _context.SaveChanges();
+            return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, stockModel.ToStockDto());
         }
     }
 }
