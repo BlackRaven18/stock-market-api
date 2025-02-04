@@ -10,5 +10,6 @@ namespace dotnet_web_api.Interfaces
         Task<Stock> CreateAsync(Stock stockModel);
         Task<Stock?> UpdateAsync(int id, UpdateStockRequestDto updateStockSto);
         Task<Stock?> DeleteAsync(int id);
+        Task<bool> StockExists(int id);
     }
 }
