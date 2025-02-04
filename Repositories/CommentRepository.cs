@@ -1,5 +1,6 @@
 ﻿using System.Windows.Input;
 using dotnet_web_api.Data;
+using dotnet_web_api.DTOs.Comment;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,23 @@ namespace dotnet_web_api.Repositories
             var comment = await _context.Comments.FindAsync(id);
 
             return comment;
+        }
+
+        public async Task<Comment?> UpdateAsync(int id, UpdateCommentRequestDto updateCommentDto)
+        {
+            var existingComment = await _context.Comments.FindAsync(id);
+
+            if(existingComment == null)
+            {
+                return null;
+            }
+
+            existingComment.Title = updateCommentDto.Title;
+            existingComment.Content = updateCommentDto.Content;
+
+            await _context.SaveChangesAsync();
+
+            return existingComment;
         }
     }
 }

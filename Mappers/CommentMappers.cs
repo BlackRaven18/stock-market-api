@@ -10,6 +10,7 @@ namespace dotnet_web_api.Mappers
         {
             return new CommentDto
             {
+                Id = commentModel.Id,
                 Title = commentModel.Title,
                 Content = commentModel.Content,
                 CreatedOn = commentModel.CreatedOn,
