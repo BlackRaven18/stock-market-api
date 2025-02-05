@@ -12,8 +12,8 @@ using dotnet_web_api.Data;
 namespace dotnet_web_api.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250205154120_SeedRoles")]
-    partial class SeedRoles
+    [Migration("20250205182449_PortfolioManyToMany")]
+    partial class PortfolioManyToMany
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -266,6 +266,21 @@ namespace dotnet_web_api.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("dotnet_web_api.Models.Portfolio", b =>
+                {
+                    b.Property<string>("AppUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("StockId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AppUserId", "StockId");
+
+                    b.HasIndex("StockId");
+
+                    b.ToTable("Portfolios");
+                });
+
             modelBuilder.Entity("dotnet_web_api.Models.Stock", b =>
                 {
                     b.Property<int>("Id")
@@ -360,9 +375,35 @@ namespace dotnet_web_api.Migrations
                     b.Navigation("Stock");
                 });
 
+            modelBuilder.Entity("dotnet_web_api.Models.Portfolio", b =>
+                {
+                    b.HasOne("dotnet_web_api.Models.AppUser", "AppUser")
+                        .WithMany("Portfolios")
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("dotnet_web_api.Models.Stock", "Stock")
+                        .WithMany("Portfolios")
+                        .HasForeignKey("StockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+
+                    b.Navigation("Stock");
+                });
+
+            modelBuilder.Entity("dotnet_web_api.Models.AppUser", b =>
+                {
+                    b.Navigation("Portfolios");
+                });
+
             modelBuilder.Entity("dotnet_web_api.Models.Stock", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Portfolios");
                 });
 #pragma warning restore 612, 618
         }

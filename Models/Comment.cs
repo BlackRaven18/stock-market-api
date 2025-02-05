@@ -1,5 +1,8 @@
-﻿namespace dotnet_web_api.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace dotnet_web_api.Models
 {
+    [Table("Comments")]
     public class Comment
     {
         public int Id { get; set; }
