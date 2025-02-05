@@ -1,5 +1,6 @@
 ﻿using dotnet_web_api.Data;
 using dotnet_web_api.DTOs.Stock;
+using dotnet_web_api.Helpers;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Mappers;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -22,9 +23,9 @@ namespace dotnet_web_api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] QueryObject query)
         {
-            var stocks = await _stockRepo.GetAllAsync();
+            var stocks = await _stockRepo.GetAllAsync(query);
 
             var stocksDto = stocks.Select(s => s.ToStockDto());
 
