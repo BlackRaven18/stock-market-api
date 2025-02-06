@@ -1,8 +1,10 @@
 ﻿using dotnet_web_api.DTOs.Comment;
 using dotnet_web_api.Extensions;
+using dotnet_web_api.Helpers;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Mappers;
 using dotnet_web_api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -27,12 +29,13 @@ namespace dotnet_web_api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [Authorize]
+        public async Task<IActionResult> GetAll([FromQuery]CommentQueryObject queryObject)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var comments = await _commentRepo.GetAllAsync();
+            var comments = await _commentRepo.GetAllAsync(queryObject);
 
             var commentsDto = comments.Select(c => c.ToCommentDto());
 

@@ -1,6 +1,7 @@
 ﻿using System.Windows.Input;
 using dotnet_web_api.Data;
 using dotnet_web_api.DTOs.Comment;
+using dotnet_web_api.Helpers;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -38,9 +39,21 @@ namespace dotnet_web_api.Repositories
             return commentModel;
         }
 
-        public async Task<List<Comment>> GetAllAsync()
+        public async Task<List<Comment>> GetAllAsync(CommentQueryObject queryObject)
         {
-            return await _context.Comments.Include(a => a.AppUser).ToListAsync();
+            var comments = _context.Comments.Include(a => a.AppUser).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(queryObject.Symbol))
+            {
+                comments = comments.Where(s => s.Stock.Symbol.ToLower() == queryObject.Symbol.ToLower());
+            }
+
+            if(queryObject.IsDescending == true)
+            {
+                comments = comments.OrderByDescending(c => c.CreatedOn);
+            }
+
+            return await comments.ToListAsync();
         }
 
         public async Task<Comment?> GetByIdAsync(int id)
