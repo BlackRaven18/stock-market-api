@@ -16,18 +16,20 @@ namespace dotnet_web_api.Controllers
         private readonly ICommentRepository _commentRepo;
         private readonly IStockRepository _stockRepo;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IFMPService _fmpService;
 
-        public CommentController(ICommentRepository commentRepo, IStockRepository stockRepo, UserManager<AppUser> userManager)
+        public CommentController(ICommentRepository commentRepo, IStockRepository stockRepo, UserManager<AppUser> userManager, IFMPService fMPService)
         {
             _commentRepo = commentRepo;
             _stockRepo = stockRepo;
             _userManager = userManager;
+            _fmpService = fMPService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var comments = await _commentRepo.GetAllAsync();
@@ -45,7 +47,7 @@ namespace dotnet_web_api.Controllers
 
             var comment = await _commentRepo.GetByIdAsync(id);
 
-            if(comment == null)
+            if (comment == null)
             {
                 return NotFound();
             }
@@ -53,21 +55,33 @@ namespace dotnet_web_api.Controllers
             return Ok(comment.ToCommentDto());
         }
 
-        [HttpPost("{stockId:int}")]
-        public async Task<IActionResult> Create([FromRoute] int stockId, [FromBody] CreateCommentRequestDto createCommentDto)
+        [HttpPost]
+        [Route("{symbol:alpha}")]
+        public async Task<IActionResult> Create([FromRoute] string symbol, [FromBody] CreateCommentRequestDto createCommentDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!await _stockRepo.StockExists(stockId))
+            var stock = await _stockRepo.GetBySymbolAsync(symbol);
+
+            if (stock == null)
             {
-                return BadRequest("Stock does not exist");
+                stock = await _fmpService.FindStockBySymbolAsync(symbol);
+
+                if (stock == null)
+                {
+                    return BadRequest("Stock does not exists");
+                }
+                else
+                {
+                    await _stockRepo.CreateAsync(stock);
+                }
             }
 
             var username = User.GetUsername();
             var appUser = await _userManager.FindByNameAsync(username);
 
-            var commentModel = createCommentDto.ToCommentFromCreateDto(stockId);
+            var commentModel = createCommentDto.ToCommentFromCreateDto(stock.Id);
             commentModel.AppUserId = appUser.Id;
 
             await _commentRepo.CreateAsync(commentModel);
@@ -83,7 +97,7 @@ namespace dotnet_web_api.Controllers
 
             var comment = await _commentRepo.UpdateAsync(id, updateCommentDto);
 
-            if(comment == null)
+            if (comment == null)
             {
                 return NotFound("Comment not found");
             }
@@ -99,7 +113,7 @@ namespace dotnet_web_api.Controllers
 
             var commentModel = await _commentRepo.DeleteAsync(id);
 
-            if(commentModel == null)
+            if (commentModel == null)
             {
                 return NotFound("Comment does not exist");
             }
