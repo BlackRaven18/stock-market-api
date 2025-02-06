@@ -6,7 +6,7 @@ namespace dotnet_web_api.Interfaces
 {
     public interface IStockRepository
     {
-        Task<List<Stock>> GetAllAsync(QueryObject query);
+        Task<List<Stock>> GetAllAsync(StockQueryObject queryObject);
         Task<Stock?> GetByIdAsync(int id);
         Task<Stock?> GetBySymbolAsync(string symbol);
         Task<Stock> CreateAsync(Stock stockModel);
