@@ -1,6 +1,6 @@
-﻿using dotnet_web_api.DTOs.Stock;
+﻿using AutoMapper;
+using dotnet_web_api.DTOs.Stock;
 using dotnet_web_api.Interfaces;
-using dotnet_web_api.Mappers;
 using dotnet_web_api.Models;
 using Newtonsoft.Json;
 
@@ -9,12 +9,12 @@ namespace dotnet_web_api.Services
     public class FMPService : IFMPService
     {
         private HttpClient _httpClient;
-        private IConfiguration _config;
+        private readonly IMapper _mapper;
 
-        public FMPService(HttpClient httpClient, IConfiguration configuration)
+        public FMPService(HttpClient httpClient, IMapper mapper, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _config = configuration;    
+            _mapper = mapper; 
         }
         public async Task<Stock> FindStockBySymbolAsync(string symbol)
         {
@@ -28,10 +28,11 @@ namespace dotnet_web_api.Services
                 {
                     var content = await result.Content.ReadAsStringAsync();
                     var tasks = JsonConvert.DeserializeObject<FMPStock[]>(content);
-                    var stock = tasks[0];
-                    if(stock != null)
+                    var stockFMP = tasks[0];
+                    if(stockFMP != null)
                     {
-                        return stock.ToStockFromFMP();
+                        var stock = _mapper.Map<Stock>(stockFMP);
+                        return stock;
                     }
 
                     return null;

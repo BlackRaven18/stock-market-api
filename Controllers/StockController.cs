@@ -1,12 +1,12 @@
-﻿using dotnet_web_api.Data;
+﻿using AutoMapper;
+using dotnet_web_api.Data;
 using dotnet_web_api.DTOs.Stock;
 using dotnet_web_api.Helpers;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Mappers;
+using dotnet_web_api.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace dotnet_web_api.Controllers
 {
@@ -16,11 +16,13 @@ namespace dotnet_web_api.Controllers
     {
         private readonly ApplicationDBContext _context;
         private readonly IStockRepository _stockRepo;
+        private readonly IMapper _mapper;
 
-        public StockController(ApplicationDBContext context, IStockRepository stockRepo)
+        public StockController(ApplicationDBContext context, IStockRepository stockRepo, IMapper mapper)
         {
             _stockRepo = stockRepo;
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -29,7 +31,7 @@ namespace dotnet_web_api.Controllers
         {
             var stocks = await _stockRepo.GetAllAsync(queryObject);
 
-            var stocksDto = stocks.Select(s => s.ToStockDto()).ToList();
+            var stocksDto = _mapper.Map<List<StockDto>>(stocks);
 
             return Ok(stocksDto);
         }
@@ -44,22 +46,36 @@ namespace dotnet_web_api.Controllers
                 return NotFound();
             }
 
-            return Ok(stock.ToStockDto());
+            var stockDto = _mapper.Map<StockDto>(stock);
+
+            return Ok(stockDto);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateStockRequestDto createStockDto)
         {
-            var stockModel = createStockDto.ToStockFromCreateDto();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var stockModel = _mapper.Map<Stock>(createStockDto);
             await _stockRepo.CreateAsync(stockModel);
 
-            return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, stockModel.ToStockDto());
+            var stockDto = _mapper.Map<StockDto>(stockModel);
+
+            return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, stockDto);
         }
 
         [HttpPut]
         [Route("{id:int}")]
         public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateStockRequestDto updateStockDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var stockModel = await _stockRepo.UpdateAsync(id, updateStockDto);
 
             if(stockModel == null)
@@ -67,7 +83,9 @@ namespace dotnet_web_api.Controllers
                 return NotFound();
             }
 
-            return Ok(stockModel.ToStockDto());
+            var stockDto = _mapper.Map<StockDto>(stockModel);
+
+            return Ok(stockDto);
         }
 
         [HttpDelete]
